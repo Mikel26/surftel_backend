@@ -4,14 +4,14 @@ const Database = use('Database');
 const axios = require('axios');
 const moment = require('moment');
 
-// const APIKEY = 'DwsnRwMfB0l56rw62tAitUvNmBdIQ2bN34VK8TUzs6k'; /* PRODUCCION */
-const APIKEY = 'FrguR1kDpFHaXHLQwplZ2CwTX3p8p9XHVTnukL98V5U'; /* PRUEBAS */
+const APIKEY = 'DwsnRwMfB0l56rw62tAitUvNmBdIQ2bN34VK8TUzs6k'; /* PRODUCCION */
+// const APIKEY = 'FrguR1kDpFHaXHLQwplZ2CwTX3p8p9XHVTnukL98V5U'; /* PRUEBAS */
 
-// const IDBodega = '0001';   /* PRODUCCION */
-const IDBodega = 'SFT001'; /* PRUEBAS */
+const IDBodega = '0001';   /* PRODUCCION */
+// const IDBodega = 'SFT001'; /* PRUEBAS */
 
-// const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/';   /* PRODUCCION */
-const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/onPeE9p43Dc5Xep1'; /* PRUEBAS */
+const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/';   /* PRODUCCION */
+// const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/onPeE9p43Dc5Xep1'; /* PRUEBAS */
 
 const URLbodega = 'https://api.contifico.com/sistema/api/v1/bodega/';
 const URLmovInv = 'https://api.contifico.com/sistema/api/v1/movimiento-inventario/';
@@ -23,8 +23,6 @@ class ProductController {
     response
   }) {
     try {
-      // let fecha = moment().format('YYYY-MM-DD');
-
       // Consulta productos de WordPress
       const productos = await Database.raw("SELECT p.ID, p.post_title as name, p.post_status as status, p.post_parent, x.meta_value as stock, y.meta_value as SKU FROM wp_posts p INNER JOIN wp_postmeta x ON x.post_id = p.ID AND x.meta_key = '_stock' LEFT JOIN wp_postmeta y ON y.post_id = p.ID AND y.meta_key = '_sku' WHERE p.post_parent=0 AND p.post_type = 'product_variation' OR p.post_type = 'product' AND p.post_status = 'publish'");
 
@@ -71,12 +69,10 @@ class ProductController {
           AND ws.status='wc-completed' AND o.checked = false;`);
 
           if (ventas[0].length > 0) {
-            // console.log('if', ventas[0].length);
             let existe = false;
             let qty = 0;
             let order_id = 0;
             for await (const venta of ventas[0]) {
-              // console.log(venta);
               if (venta.meta_key === '_product_id' && venta.meta_value == WP.ID) existe = true;
               if (existe) {
                 if (venta.meta_key == '_qty') {
@@ -85,18 +81,11 @@ class ProductController {
                 }
               }
             }
-            // console.log('existe', existe);
             if (qty > 0 && existe) {
               //existe una venta en WP
               //aqui actualizar y generar egreso y poner checked true
               /* 'codigo' es el parametro equivalente a SKU en WP, el ID de CONTIFICO es un formato autogenerado y alfanumerico de longitud 16 */
               if (WP.SKU == CTFC.codigo) {
-
-
-                console.log('CONTIFICO', qtyCTFC);
-                console.log('WP', qtyWP);
-
-
                 /* venta realizada en WP, se procede con la generacion de orden de egreso */
 
                 let diff = qtyCTFC - qtyWP;
@@ -128,8 +117,6 @@ class ProductController {
                   "descripcion": "Egreso por venta web del dia " + moment().format('DD-MM-YYYY')
                 };
 
-                console.log('dataEgreso', dataEgreso);
-
                 await axios.post(URLmovInv,
                   dataEgreso, {
                     headers: {
@@ -139,7 +126,6 @@ class ProductController {
                 ).then(async postResp => {
                   let txtResp = `EGRESO REGISTRADO. CODIGO: ${postResp.data.codigo} FECHA: ${postResp.data.fecha}`;
                   await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txtResp}','${qtyCTFC}','${newStock}','VENTA')`);
-                  // console.log(txtResp);
                 }).catch(async err => {
                   console.log(err);
                   await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${err}','0','0','ERROR')`);
@@ -154,8 +140,6 @@ class ProductController {
 
               }
             } else {
-              // if (existe) {
-              // console.log('else');
               /* venta a través de Contifico, se procede con la actualizacion de stock, nombre y precio en WP */
               await Database.raw(`UPDATE wp_postmeta SET meta_value = '${qtyCTFC}' WHERE post_id = ${id} AND meta_key = '_stock'`);
               await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_price'`);
@@ -164,10 +148,7 @@ class ProductController {
 
               /* se registra en LOG */
               let txt = 'ACTUALIZACION DE RUTINA'
-              await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txt}','${qtyCTFC}','${qtyCTFC}','RUTINA')`);
-              console.log("ACTUALIZACION REALIZADA");
-
-              // }
+              await Database.raw(`INSERT wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txt}','${qtyCTFC}','${qtyCTFC}','RUTINA')`);
             }
           }
         }
