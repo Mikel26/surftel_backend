@@ -4,14 +4,14 @@ const Database = use('Database');
 const axios = require('axios');
 const moment = require('moment');
 
-// const APIKEY = 'DwsnRwMfB0l56rw62tAitUvNmBdIQ2bN34VK8TUzs6k'; /* PRODUCCION */
-const APIKEY = 'FrguR1kDpFHaXHLQwplZ2CwTX3p8p9XHVTnukL98V5U'; /* PRUEBAS */
+const APIKEY = 'DwsnRwMfB0l56rw62tAitUvNmBdIQ2bN34VK8TUzs6k'; /* PRODUCCION */
+// const APIKEY = 'FrguR1kDpFHaXHLQwplZ2CwTX3p8p9XHVTnukL98V5U'; /* PRUEBAS */
 
-// const IDBodega = '0001';   /* PRODUCCION */
-const IDBodega = 'SFT001'; /* PRUEBAS */
+const IDBodega = '0001';   /* PRODUCCION */
+// const IDBodega = 'SFT001'; /* PRUEBAS */
 
-// const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/';   /* PRODUCCION */
-const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/onPeE9p43Dc5Xep1'; /* PRUEBAS */
+const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/';   /* PRODUCCION */
+// const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/onPeE9p43Dc5Xep1'; /* PRUEBAS */
 
 const URLbodega = 'https://api.contifico.com/sistema/api/v1/bodega/';
 const URLmovInv = 'https://api.contifico.com/sistema/api/v1/movimiento-inventario/';
@@ -23,8 +23,6 @@ class ProductController {
     response
   }) {
     try {
-      // let fecha = moment().format('YYYY-MM-DD');
-
       // Consulta productos de WordPress
       const productos = await Database.raw("SELECT p.ID, p.post_title as name, p.post_status as status, p.post_parent, x.meta_value as stock, y.meta_value as SKU FROM wp_posts p INNER JOIN wp_postmeta x ON x.post_id = p.ID AND x.meta_key = '_stock' LEFT JOIN wp_postmeta y ON y.post_id = p.ID AND y.meta_key = '_sku' WHERE p.post_parent=0 AND p.post_type = 'product_variation' OR p.post_type = 'product' AND p.post_status = 'publish'");
 
@@ -74,7 +72,6 @@ class ProductController {
             AND ws.status='wc-completed' AND o.checked = false;`);
 
           if (ventas[0].length > 0) {
-            // console.log('if', ventas[0].length);
             let existe = false;
             let qty = 0;
             let order_id = 0;
