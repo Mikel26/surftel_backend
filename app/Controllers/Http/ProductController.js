@@ -55,20 +55,23 @@ class ProductController {
         let name = CTFC.nombre;
         let pctjIVA = 1 + (CTFC.porcentaje_iva / 100);
         let price = CTFC.pvp1 * pctjIVA;
-        /* recorre productos de WP */
-        for await (const WP of productos[0]) {
-          let id = WP.ID;
-          let qtyWP = Number(WP.stock);
 
-          console.log(`Mostrando producto: ${WP.ID}`);
+        const prodFind = productos[0].find(prod => prod.SKU == CTFC.codigo);
+
+        if (prodFind) {
+          console.log('prodFind :>> ', prodFind);
+          let id = prodFind.ID;
+          let qtyWP = Number(prodFind.stock);
+
+          console.log(`Mostrando producto: ${id}`);
           //pregunto si hay venta en wp con el id_post
           const ventas = await Database.raw(`SELECT o.order_id, om.meta_key, om.meta_value
-          FROM wp_woocommerce_order_items o
-          JOIN wp_woocommerce_order_itemmeta om on om.order_item_id = o.order_item_id AND o.order_item_type = 'line_item'
-          JOIN wp_wc_order_stats ws on ws.order_id = o.order_id 
-          WHERE (om.meta_key = '_product_id' AND om.meta_value = ${WP.ID}) 
-          or (om.meta_key = '_qty')
-          AND ws.status='wc-completed' AND o.checked = false;`);
+            FROM wp_woocommerce_order_items o
+            JOIN wp_woocommerce_order_itemmeta om on om.order_item_id = o.order_item_id AND o.order_item_type = 'line_item'
+            JOIN wp_wc_order_stats ws on ws.order_id = o.order_id 
+            WHERE (om.meta_key = '_product_id' AND om.meta_value = ${id}) 
+            or (om.meta_key = '_qty')
+            AND ws.status='wc-completed' AND o.checked = false;`);
 
           if (ventas[0].length > 0) {
             // console.log('if', ventas[0].length);
@@ -77,7 +80,7 @@ class ProductController {
             let order_id = 0;
             for await (const venta of ventas[0]) {
               // console.log(venta);
-              if (venta.meta_key === '_product_id' && venta.meta_value == WP.ID) existe = true;
+              if (venta.meta_key === '_product_id' && venta.meta_value == id) existe = true;
               if (existe) {
                 if (venta.meta_key == '_qty') {
                   qty = venta.meta_value
@@ -85,92 +88,86 @@ class ProductController {
                 }
               }
             }
-            // console.log('existe', existe);
+
+            //pregunta si existe una venta en WP
             if (qty > 0 && existe) {
-              //existe una venta en WP
-              //aqui actualizar y generar egreso y poner checked true
-              /* 'codigo' es el parametro equivalente a SKU en WP, el ID de CONTIFICO es un formato autogenerado y alfanumerico de longitud 16 */
-              if (WP.SKU == CTFC.codigo) {
+              /* venta realizada en WP, se procede con la generacion de orden de egreso */
 
+              console.log('CONTIFICO', qtyCTFC);
+              console.log('WP', qtyWP);
 
-                console.log('CONTIFICO', qtyCTFC);
-                console.log('WP', qtyWP);
+              let diff = qtyCTFC - qtyWP;
+              let newStock = qtyCTFC - diff;
 
+              await axios.get(URLbodega, {
+                headers: {
+                  'Authorization': APIKEY
+                }
+              }).then(async respBodega => {
+                for await (const x of respBodega.data) {
+                  if (x.codigo == IDBodega) {
+                    bodega = x.id
+                  }
+                }
+              }).catch(async error => {
+                await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${error}','0','0','ERROR')`);
+                console.error(error);
+              });
 
-                /* venta realizada en WP, se procede con la generacion de orden de egreso */
+              let dataEgreso = {
+                "tipo": "EGR",
+                "fecha": moment().format('DD/MM/YYYY'),
+                "bodega_id": bodega,
+                "detalles": [{
+                  "producto_id": idCTFC,
+                  "cantidad": diff
+                }],
+                "descripcion": "Egreso por venta web del dia " + moment().format('DD-MM-YYYY')
+              };
 
-                let diff = qtyCTFC - qtyWP;
-                let newStock = qtyCTFC - diff;
+              console.log('dataEgreso', dataEgreso);
 
-                await axios.get(URLbodega, {
+              await axios.post(URLmovInv,
+                dataEgreso, {
                   headers: {
                     'Authorization': APIKEY
                   }
-                }).then(async respBodega => {
-                  for await (const x of respBodega.data) {
-                    if (x.codigo == IDBodega) {
-                      bodega = x.id
-                    }
-                  }
-                }).catch(async error => {
-                  await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${error}','0','0','ERROR')`);
-                  console.error(error);
-                });
+                }
+              ).then(async postResp => {
+                let txtResp = `EGRESO REGISTRADO. CODIGO: ${postResp.data.codigo} FECHA: ${postResp.data.fecha}`;
+                await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txtResp}','${qtyCTFC}','${newStock}','VENTA')`);
+                // console.log(txtResp);
+              }).catch(async err => {
+                console.log(err);
+                await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${err}','0','0','ERROR')`);
+              })
 
-                let dataEgreso = {
-                  "tipo": "EGR",
-                  "fecha": moment().format('DD/MM/YYYY'),
-                  "bodega_id": bodega,
-                  "detalles": [{
-                    "producto_id": idCTFC,
-                    "cantidad": diff
-                  }],
-                  "descripcion": "Egreso por venta web del dia " + moment().format('DD-MM-YYYY')
-                };
-
-                console.log('dataEgreso', dataEgreso);
-
-                await axios.post(URLmovInv,
-                  dataEgreso, {
-                    headers: {
-                      'Authorization': APIKEY
-                    }
-                  }
-                ).then(async postResp => {
-                  let txtResp = `EGRESO REGISTRADO. CODIGO: ${postResp.data.codigo} FECHA: ${postResp.data.fecha}`;
-                  await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txtResp}','${qtyCTFC}','${newStock}','VENTA')`);
-                  // console.log(txtResp);
-                }).catch(async err => {
-                  console.log(err);
-                  await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${err}','0','0','ERROR')`);
-                })
-
-                await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_price'`);
-                await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_regular_price'`);
-                await Database.raw(`UPDATE wp_posts SET post_title = '${name}' WHERE ID = ${id}`);
-
-                /* se cambia el checked */
-                await Database.raw(`UPDATE wp_woocommerce_order_items SET checked = true WHERE order_id = ${order_id};`);
-
-              }
-            } else {
-              // if (existe) {
-              // console.log('else');
-              /* venta a través de Contifico, se procede con la actualizacion de stock, nombre y precio en WP */
-              await Database.raw(`UPDATE wp_postmeta SET meta_value = '${qtyCTFC}' WHERE post_id = ${id} AND meta_key = '_stock'`);
               await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_price'`);
               await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_regular_price'`);
               await Database.raw(`UPDATE wp_posts SET post_title = '${name}' WHERE ID = ${id}`);
 
-              /* se registra en LOG */
-              let txt = 'ACTUALIZACION DE RUTINA'
-              await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txt}','${qtyCTFC}','${qtyCTFC}','RUTINA')`);
-              console.log("ACTUALIZACION REALIZADA");
+              /* se cambia el checked */
+              await Database.raw(`UPDATE wp_woocommerce_order_items SET checked = true WHERE order_id = ${order_id};`);
 
-              // }
             }
+          } else {
+            // if (existe) {
+            console.log('else');
+            /* venta a través de Contifico, se procede con la actualizacion de stock, nombre y precio en WP */
+            await Database.raw(`UPDATE wp_postmeta SET meta_value = '${qtyCTFC}' WHERE post_id = ${id} AND meta_key = '_stock'`);
+            await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_price'`);
+            await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_regular_price'`);
+            await Database.raw(`UPDATE wp_posts SET post_title = '${name}' WHERE ID = ${id}`);
+
+            /* se registra en LOG */
+            let txt = `ACTUALIZACION DE RUTINA. PRODUCTO: ${id}`
+            await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txt}','${qtyCTFC}','${qtyCTFC}','RUTINA')`);
+            console.log("ACTUALIZACION REALIZADA");
+
+
           }
         }
+
       }
 
       return response.status(200).send("ACTUALIZACION COMPLETADA");
