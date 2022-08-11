@@ -7,10 +7,10 @@ const moment = require('moment');
 const APIKEY = 'DwsnRwMfB0l56rw62tAitUvNmBdIQ2bN34VK8TUzs6k'; /* PRODUCCION */
 // const APIKEY = 'FrguR1kDpFHaXHLQwplZ2CwTX3p8p9XHVTnukL98V5U'; /* PRUEBAS */
 
-const IDBodega = '0001';   /* PRODUCCION */
+const IDBodega = '0001'; /* PRODUCCION */
 // const IDBodega = 'SFT001'; /* PRUEBAS */
 
-const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/';   /* PRODUCCION */
+const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/'; /* PRODUCCION */
 // const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/onPeE9p43Dc5Xep1'; /* PRUEBAS */
 
 const URLbodega = 'https://api.contifico.com/sistema/api/v1/bodega/';
@@ -26,6 +26,7 @@ class ProductController {
       // Consulta productos de WordPress
       const productos = await Database.raw("SELECT p.ID, p.post_title as name, p.post_status as status, p.post_parent, x.meta_value as stock, y.meta_value as SKU FROM wp_posts p INNER JOIN wp_postmeta x ON x.post_id = p.ID AND x.meta_key = '_stock' LEFT JOIN wp_postmeta y ON y.post_id = p.ID AND y.meta_key = '_sku' WHERE p.post_parent=0 AND p.post_type = 'product_variation' OR p.post_type = 'product' AND p.post_status = 'publish'");
 
+      console.log('prodWP :>> ', productos[0].length);
       //   Consulta productos de CONTIFICO
       let data = [];
 
@@ -34,6 +35,7 @@ class ProductController {
           'Authorization': APIKEY
         }
       }).then(res => {
+        console.log('prod contifico :>> ', res.data.length);
         if (res.data.length) {
           data = res.data;
         } else {
@@ -50,7 +52,7 @@ class ProductController {
         let qtyCTFC = Number(CTFC.cantidad_stock);
         let idCTFC = CTFC.id;
         let bodega = '';
-        let name = CTFC.nombre;
+        let name = CTFC.nombre.toUpperCase();
         let pctjIVA = 1 + (CTFC.porcentaje_iva / 100);
         let price = CTFC.pvp1 * pctjIVA;
 
@@ -71,7 +73,10 @@ class ProductController {
             or (om.meta_key = '_qty')
             AND ws.status='wc-completed' AND o.checked = false;`);
 
-          if (ventas[0].length > 0) {
+          const venta = ventas[0].find(x => x.meta_key == '_qty')
+          console.log('venta :>> ', venta);
+
+          if (venta) {
             let existe = false;
             let qty = 0;
             let order_id = 0;
@@ -87,7 +92,7 @@ class ProductController {
             }
 
             //pregunta si existe una venta en WP
-            if (qty > 0 && existe) {
+            if (qty > 0) {
               /* venta realizada en WP, se procede con la generacion de orden de egreso */
 
               console.log('CONTIFICO', qtyCTFC);
