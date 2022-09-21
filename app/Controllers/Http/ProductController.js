@@ -59,7 +59,7 @@ class ProductController {
 
         cont++
         console.log('Revisando: ', CTFC.nombre.toUpperCase(), ' Cantidad de productos revisados: ', cont)
-        const prodFind = productos[0].find(prod => prod.SKU == CTFC.codigo);
+        const prodFind = productos[0].find( (prod) => prod.SKU == CTFC.codigo);
 
         if (prodFind) {
           console.log('Producto encontrado :>> ', prodFind);
@@ -171,6 +171,8 @@ class ProductController {
 
 
           }
+        }else{
+          console.log("🚀 ~ Producto: ", CTFC.nombre.toUpperCase() , " no encontrado en WP.")
         }
 
       }
