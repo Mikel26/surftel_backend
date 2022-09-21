@@ -24,7 +24,7 @@ class ProductController {
   }) {
     try {
       // Consulta productos de WordPress
-      const productos = await Database.raw("SELECT p.ID, p.post_title as name, p.post_status as status, p.post_parent, x.meta_value as stock, y.meta_value as SKU FROM wp_posts p INNER JOIN wp_postmeta x ON x.post_id = p.ID AND x.meta_key = '_stock' LEFT JOIN wp_postmeta y ON y.post_id = p.ID AND y.meta_key = '_sku' WHERE p.post_parent=0 AND p.post_type = 'product_variation' OR p.post_type = 'product' AND p.post_status = 'publish'");
+      const productos = await Database.raw("SELECT p.ID, p.post_title as name, p.post_status as status, p.post_parent, x.meta_value as stock, y.meta_value as SKU FROM wp_posts p INNER JOIN wp_postmeta x ON x.post_id = p.ID AND x.meta_key = '_stock' LEFT JOIN wp_postmeta y ON y.post_id = p.ID AND y.meta_key = '_sku' WHERE p.post_type = 'product_variation' OR p.post_type = 'product' AND p.post_status = 'publish'");
 
       console.log('Productos en WordPress :>> ', productos[0].length);
       console.log("🚀 ~ file: ProductController.js ~ line 30 ~ ProductController ~ productos[0]", productos[0])
