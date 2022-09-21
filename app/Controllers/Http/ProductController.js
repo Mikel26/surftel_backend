@@ -7,7 +7,7 @@ const moment = require('moment');
 const APIKEY = 'DwsnRwMfB0l56rw62tAitUvNmBdIQ2bN34VK8TUzs6k'; /* PRODUCCION */
 // const APIKEY = 'FrguR1kDpFHaXHLQwplZ2CwTX3p8p9XHVTnukL98V5U'; /* PRUEBAS */
 
-const IDBodega = '0001'; /* PRODUCCION */
+const IDBodega = '001'; /* PRODUCCION */
 // const IDBodega = 'SFT001'; /* PRUEBAS */
 
 const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/'; /* PRODUCCION */
@@ -26,7 +26,7 @@ class ProductController {
       // Consulta productos de WordPress
       const productos = await Database.raw("SELECT p.ID, p.post_title as name, p.post_status as status, p.post_parent, x.meta_value as stock, y.meta_value as SKU FROM wp_posts p INNER JOIN wp_postmeta x ON x.post_id = p.ID AND x.meta_key = '_stock' LEFT JOIN wp_postmeta y ON y.post_id = p.ID AND y.meta_key = '_sku' WHERE p.post_parent=0 AND p.post_type = 'product_variation' OR p.post_type = 'product' AND p.post_status = 'publish'");
 
-      console.log('prodWP :>> ', productos[0].length);
+      console.log('Productos en WordPress :>> ', productos[0].length);
       //   Consulta productos de CONTIFICO
       let data = [];
 
@@ -35,7 +35,7 @@ class ProductController {
           'Authorization': APIKEY
         }
       }).then(res => {
-        console.log('prod contifico :>> ', res.data.length);
+        console.log('Productos en Contifico :>> ', res.data.length);
         if (res.data.length) {
           data = res.data;
         } else {
@@ -59,7 +59,7 @@ class ProductController {
         const prodFind = productos[0].find(prod => prod.SKU == CTFC.codigo);
 
         if (prodFind) {
-          console.log('prodFind :>> ', prodFind);
+          console.log('Producto encontrado :>> ', prodFind);
           let id = prodFind.ID;
           let qtyWP = Number(prodFind.stock);
 
@@ -68,8 +68,8 @@ class ProductController {
           const ventas = await Database.raw(`SELECT o.order_id, om.meta_key, om.meta_value
             FROM wp_woocommerce_order_items o
             JOIN wp_woocommerce_order_itemmeta om on om.order_item_id = o.order_item_id AND o.order_item_type = 'line_item'
-            JOIN wp_wc_order_stats ws on ws.order_id = o.order_id 
-            WHERE (om.meta_key = '_product_id' AND om.meta_value = ${id}) 
+            JOIN wp_wc_order_stats ws on ws.order_id = o.order_id
+            WHERE (om.meta_key = '_product_id' AND om.meta_value = ${id})
             or (om.meta_key = '_qty')
             AND ws.status='wc-completed' AND o.checked = false;`);
 
