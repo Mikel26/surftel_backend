@@ -56,7 +56,9 @@ class ProductController {
         let pctjIVA = 1 + (CTFC.porcentaje_iva / 100);
         let price = CTFC.pvp1 * pctjIVA;
 
+        console.log('Revisando: ', CTFC.nombre.toUpperCase())
         const prodFind = productos[0].find(prod => prod.SKU == CTFC.codigo);
+        console.log("🚀 ~ file: ProductController.js ~ line 61 ~ ProductController ~ forawait ~ prodFind", prodFind)
 
         if (prodFind) {
           console.log('Producto encontrado :>> ', prodFind);
