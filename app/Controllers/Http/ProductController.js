@@ -27,7 +27,6 @@ class ProductController {
       const productos = await Database.raw("SELECT p.ID, p.post_title as name, p.post_status as status, p.post_parent, x.meta_value as stock, y.meta_value as SKU FROM wp_posts p INNER JOIN wp_postmeta x ON x.post_id = p.ID AND x.meta_key = '_stock' LEFT JOIN wp_postmeta y ON y.post_id = p.ID AND y.meta_key = '_sku' WHERE p.post_type = 'product_variation' OR p.post_type = 'product' AND p.post_status = 'publish'");
 
       console.log('Productos en WordPress :>> ', productos[0].length);
-      console.log("🚀 ~ file: ProductController.js ~ line 30 ~ ProductController ~ productos[0]", productos[0])
       //   Consulta productos de CONTIFICO
       let data = [];
 
@@ -74,7 +73,6 @@ class ProductController {
             JOIN wp_woocommerce_order_itemmeta om on om.order_item_id = o.order_item_id AND o.order_item_type = 'line_item'
             JOIN wp_wc_order_stats ws on ws.order_id = o.order_id
             WHERE (om.meta_key = '_product_id' AND om.meta_value = ${id})
-            or (om.meta_key = '_qty')
             AND ws.status='wc-completed' AND o.checked = false;`);
 
           const venta = ventas[0].find(x => x.meta_key == '_qty')
