@@ -47,6 +47,7 @@ class ProductController {
       });
 
 
+      let cont = 0
       /* recorre productos de CONTIFICO */
       for await (const CTFC of data) {
         let qtyCTFC = Number(CTFC.cantidad_stock);
@@ -56,9 +57,9 @@ class ProductController {
         let pctjIVA = 1 + (CTFC.porcentaje_iva / 100);
         let price = CTFC.pvp1 * pctjIVA;
 
-        console.log('Revisando: ', CTFC.nombre.toUpperCase())
+        cont++
+        console.log('Revisando: ', CTFC.nombre.toUpperCase(), ' Cantidad de productos revisados: ', cont)
         const prodFind = productos[0].find(prod => prod.SKU == CTFC.codigo);
-        console.log("🚀 ~ file: ProductController.js ~ line 61 ~ ProductController ~ forawait ~ prodFind", prodFind)
 
         if (prodFind) {
           console.log('Producto encontrado :>> ', prodFind);
