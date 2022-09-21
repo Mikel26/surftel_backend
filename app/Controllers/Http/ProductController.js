@@ -46,8 +46,6 @@ class ProductController {
         await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${error}','0','0','ERROR')`);
       });
 
-
-      let cont = 0
       /* recorre productos de CONTIFICO */
       for await (const CTFC of data) {
         let qtyCTFC = Number(CTFC.cantidad_stock);
@@ -57,12 +55,10 @@ class ProductController {
         let pctjIVA = 1 + (CTFC.porcentaje_iva / 100);
         let price = CTFC.pvp1 * pctjIVA;
 
-        cont++
-        console.log('Revisando: ', CTFC.nombre.toUpperCase(), ' Cantidad de productos revisados: ', cont)
         const prodFind = productos[0].find( (prod) => prod.SKU == CTFC.codigo);
 
         if (prodFind) {
-          console.log('Producto encontrado :>> ', prodFind.name);
+          console.log('1. Producto encontrado :>> ', prodFind.name);
           let id = prodFind.ID;
           let qtyWP = Number(prodFind.stock);
 
@@ -75,7 +71,6 @@ class ProductController {
             AND ws.status='wc-completed' AND o.checked = false;`);
 
           const venta = ventas[0].find(x => x.meta_key == '_qty')
-          console.log('venta :>> ', venta);
 
           if (venta) {
             let existe = false;
@@ -163,12 +158,12 @@ class ProductController {
             /* se registra en LOG */
             let txt = `ACTUALIZACION DE RUTINA. PRODUCTO: ${id}`
             await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txt}','${qtyCTFC}','${qtyCTFC}','RUTINA')`);
-            console.log(`ACTUALIZACION REALIZADA CON DATOS STOCK: ${qtyCTFC}, NAME: ${name} Y PVP: ${price}`, );
+            console.log(`2. ACTUALIZACION REALIZADA CON DATOS STOCK: ${qtyCTFC}, NAME: ${name} Y PVP: ${price}`, );
 
 
           }
         }else{
-          console.log("🚀 ~ Producto: ", CTFC.nombre.toUpperCase() , " no encontrado en WP.")
+          console.log("1. Producto: ", CTFC.nombre.toUpperCase() , " no encontrado en WP.")
         }
 
       }
