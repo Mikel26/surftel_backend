@@ -62,11 +62,10 @@ class ProductController {
         const prodFind = productos[0].find( (prod) => prod.SKU == CTFC.codigo);
 
         if (prodFind) {
-          console.log('Producto encontrado :>> ', prodFind);
+          console.log('Producto encontrado :>> ', prodFind.name);
           let id = prodFind.ID;
           let qtyWP = Number(prodFind.stock);
 
-          console.log(`Mostrando producto: ${id}`);
           //pregunto si hay venta en wp con el id_post
           const ventas = await Database.raw(`SELECT o.order_id, om.meta_key, om.meta_value
             FROM wp_woocommerce_order_items o
@@ -155,8 +154,6 @@ class ProductController {
 
             }
           } else {
-            // if (existe) {
-            console.log('else');
             /* venta a través de Contifico, se procede con la actualizacion de stock, nombre y precio en WP */
             await Database.raw(`UPDATE wp_postmeta SET meta_value = '${qtyCTFC}' WHERE post_id = ${id} AND meta_key = '_stock'`);
             await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_price'`);
@@ -166,7 +163,7 @@ class ProductController {
             /* se registra en LOG */
             let txt = `ACTUALIZACION DE RUTINA. PRODUCTO: ${id}`
             await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txt}','${qtyCTFC}','${qtyCTFC}','RUTINA')`);
-            console.log("ACTUALIZACION REALIZADA");
+            console.log(`ACTUALIZACION REALIZADA CON DATOS STOCK: ${qtyCTFC}, NAME: ${name} Y PVP: ${price}`, );
 
 
           }
