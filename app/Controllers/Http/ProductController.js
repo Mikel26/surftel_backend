@@ -8,7 +8,7 @@ const APIKEY = 'DwsnRwMfB0l56rw62tAitUvNmBdIQ2bN34VK8TUzs6k'; /* PRODUCCION */
 // const APIKEY = 'FrguR1kDpFHaXHLQwplZ2CwTX3p8p9XHVTnukL98V5U'; /* PRUEBAS */
 
 const IDBodega = '001'; /* PRODUCCION */
-const bodega_id = "wJvaMjP8HoXLbpzg"
+const bodega_id = "pKBe1jOQuj30aXyO"
 // const IDBodega = 'SFT001'; /* PRUEBAS */
 
 const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/'; /* PRODUCCION */
@@ -62,7 +62,7 @@ class ProductController {
           console.log('1. Producto encontrado :>> ', prodFind.name);
           //TODO si encontramos el producto aqui si hay que buscar el stock de ese producto ejemplo:
           const URLstocks = `https://api.contifico.com/sistema/api/v1/producto/${CTFC.id}/stock/`;
-          const stockProd = [];
+          let stockProd = [];
           await axios.get(URLstocks, {
             headers: {
               'Authorization': APIKEY
