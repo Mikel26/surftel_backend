@@ -48,6 +48,7 @@ class ProductController {
 
       /* recorre productos de CONTIFICO */
       for await (const CTFC of data) {
+        //TODO aqui este stock de contifico es el global, no necesitamos ese
         let qtyCTFC = Number(CTFC.cantidad_stock);
         let idCTFC = CTFC.id;
         let bodega = '';
@@ -58,6 +59,8 @@ class ProductController {
         const prodFind = productos[0].find( (prod) => prod.SKU == CTFC.codigo);
 
         if (prodFind) {
+          //TODO si encontramos el producto aqui si hay que buscar el stock de ese producto en la bodega especifica (FLAVIO REYES) ejemplo:
+          const stockCTF = //consulta a api de bodega especifca y producto
           console.log('1. Producto encontrado :>> ', prodFind.name);
           let id = prodFind.ID;
           let qtyWP = Number(prodFind.stock);
@@ -150,6 +153,7 @@ class ProductController {
             }
           } else {
             /* venta a través de Contifico, se procede con la actualizacion de stock, nombre y precio en WP */
+            //TODO aqui cambiar el qtyCTFC por nueva variable de la consulta stockCTF
             await Database.raw(`UPDATE wp_postmeta SET meta_value = '${qtyCTFC}' WHERE post_id = ${id} AND meta_key = '_stock'`);
             await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_price'`);
             await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_regular_price'`);
