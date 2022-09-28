@@ -70,7 +70,7 @@ class ProductController {
           }).then(res => {
             console.log('Stock de producto en contifico :>> ', res.data.length);
             if (res.data.length) {
-              dastockProdta = res.data;
+              stockProd = res.data;
             } else {
               stockProd = [res.data];
             }
