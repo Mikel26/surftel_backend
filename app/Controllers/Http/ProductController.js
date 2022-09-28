@@ -8,6 +8,7 @@ const APIKEY = 'DwsnRwMfB0l56rw62tAitUvNmBdIQ2bN34VK8TUzs6k'; /* PRODUCCION */
 // const APIKEY = 'FrguR1kDpFHaXHLQwplZ2CwTX3p8p9XHVTnukL98V5U'; /* PRUEBAS */
 
 const IDBodega = '001'; /* PRODUCCION */
+const bodega_id = "wJvaMjP8HoXLbpzg"
 // const IDBodega = 'SFT001'; /* PRUEBAS */
 
 const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/'; /* PRODUCCION */
@@ -57,12 +58,32 @@ class ProductController {
         let price = CTFC.pvp2 * pctjIVA;
 
         const prodFind = productos[0].find( (prod) => prod.SKU == CTFC.codigo);
+        console.log('1. Producto encontrado :>> ', prodFind.name);
 
         if (prodFind) {
-          //TODO si encontramos el producto aqui si hay que buscar el stock de ese producto en la bodega especifica (FLAVIO REYES) ejemplo:
-          const stockCTF = //consulta a api de producto especifico
-          //luego haces un find por bodeha y sacas el stock de esa bodega en partcular
-          console.log('1. Producto encontrado :>> ', prodFind.name);
+          //TODO si encontramos el producto aqui si hay que buscar el stock de ese producto ejemplo:
+          const stockProd = [];
+          await axios.get(URLprod, {
+            headers: {
+              'Authorization': APIKEY
+            }
+          }).then(res => {
+            console.log('Stock de producto en contifico :>> ', res.data.length);
+            if (res.data.length) {
+              dastockProdta = res.data;
+            } else {
+              stockProd = [res.data];
+            }
+          }).catch(async error => {
+            console.error(error);
+            await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${error}','0','0','ERROR')`);
+          });
+
+          //luego haces un find por bodega y sacas el stock de esa bodega en partcular
+          let stockCTF = stockProd.find( (prod) => prod.bodega_id == bodega_id)
+          console.log("🚀 ~ file: ProductController.js ~ line 84 ~ ProductController ~ forawait ~ stockCTF", stockCTF)
+          stockCTF ? Number(stockCTF.cantidad) : 0
+
           let id = prodFind.ID;
           let qtyWP = Number(prodFind.stock);
 
@@ -155,7 +176,7 @@ class ProductController {
           } else {
             /* venta a través de Contifico, se procede con la actualizacion de stock, nombre y precio en WP */
             //TODO aqui cambiar el qtyCTFC por nueva variable de la consulta stockCTF
-            await Database.raw(`UPDATE wp_postmeta SET meta_value = '${qtyCTFC}' WHERE post_id = ${id} AND meta_key = '_stock'`);
+            await Database.raw(`UPDATE wp_postmeta SET meta_value = '${stockCTF}' WHERE post_id = ${id} AND meta_key = '_stock'`);
             await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_price'`);
             await Database.raw(`UPDATE wp_postmeta SET meta_value = '${price}' WHERE post_id = ${id} AND meta_key = '_regular_price'`);
             await Database.raw(`UPDATE wp_posts SET post_title = '${name}' WHERE ID = ${id}`);
