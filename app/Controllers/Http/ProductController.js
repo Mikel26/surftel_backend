@@ -82,7 +82,7 @@ class ProductController {
           //luego haces un find por bodega y sacas el stock de esa bodega en partcular
           let stockCTF = stockProd.find( (prod) => prod.bodega_id == bodega_id)
           console.log("🚀 ~ file: ProductController.js ~ line 84 ~ ProductController ~ forawait ~ stockCTF", stockCTF)
-          stockCTF ? Number(stockCTF.cantidad) : 0
+          stockCTF ? stockCTF = Number(stockCTF.cantidad) : stockCTF = 0
 
           let id = prodFind.ID;
           let qtyWP = Number(prodFind.stock);
@@ -116,11 +116,11 @@ class ProductController {
             if (qty > 0) {
               /* venta realizada en WP, se procede con la generacion de orden de egreso */
 
-              console.log('CONTIFICO', qtyCTFC);
+              console.log('CONTIFICO', stockCTF);
               console.log('WP', qtyWP);
 
-              let diff = qtyCTFC - qtyWP;
-              let newStock = qtyCTFC - diff;
+              let diff = stockCTF - qtyWP;
+              let newStock = stockCTF - diff;
 
               await axios.get(URLbodega, {
                 headers: {
@@ -158,7 +158,7 @@ class ProductController {
                 }
               ).then(async postResp => {
                 let txtResp = `EGRESO REGISTRADO. CODIGO: ${postResp.data.codigo} FECHA: ${postResp.data.fecha}`;
-                await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txtResp}','${qtyCTFC}','${newStock}','VENTA')`);
+                await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txtResp}','${stockCTF}','${newStock}','VENTA')`);
                 // console.log(txtResp);
               }).catch(async err => {
                 console.log(err);
@@ -183,8 +183,8 @@ class ProductController {
 
             /* se registra en LOG */
             let txt = `ACTUALIZACION DE RUTINA. PRODUCTO: ${id}`
-            await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txt}','${qtyCTFC}','${qtyCTFC}','RUTINA')`);
-            console.log(`2. ACTUALIZACION REALIZADA CON DATOS STOCK: ${qtyCTFC}, NAME: ${name} Y PVP: ${price}`, );
+            await Database.raw(`INSERT INTO wp_logs (descripcion, stock_ant, stock, tipo_mov) VALUES ('${txt}','${stockCTF}','${stockCTF}','RUTINA')`);
+            console.log(`2. ACTUALIZACION REALIZADA CON DATOS STOCK: ${stockCTF}, NAME: ${name} Y PVP: ${price}`, );
 
 
           }
@@ -206,3 +206,4 @@ class ProductController {
 }
 
 module.exports = ProductController
+si
