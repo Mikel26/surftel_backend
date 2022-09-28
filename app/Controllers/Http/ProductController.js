@@ -57,9 +57,9 @@ class ProductController {
         let price = CTFC.pvp2 * pctjIVA;
 
         const prodFind = productos[0].find( (prod) => prod.SKU == CTFC.codigo);
-        console.log('1. Producto encontrado :>> ', prodFind.name);
 
         if (prodFind) {
+          console.log('1. Producto encontrado :>> ', prodFind.name);
           //TODO si encontramos el producto aqui si hay que buscar el stock de ese producto ejemplo:
           const URLstocks = `https://api.contifico.com/sistema/api/v1/producto/${CTFC.id}/stock/`;
           const stockProd = [];
