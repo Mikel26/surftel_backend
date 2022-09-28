@@ -60,7 +60,8 @@ class ProductController {
 
         if (prodFind) {
           //TODO si encontramos el producto aqui si hay que buscar el stock de ese producto en la bodega especifica (FLAVIO REYES) ejemplo:
-          const stockCTF = //consulta a api de bodega especifca y producto
+          const stockCTF = //consulta a api de producto especifico
+          //luego haces un find por bodeha y sacas el stock de esa bodega en partcular
           console.log('1. Producto encontrado :>> ', prodFind.name);
           let id = prodFind.ID;
           let qtyWP = Number(prodFind.stock);
