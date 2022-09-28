@@ -17,7 +17,6 @@ const URLprod = 'https://api.contifico.com/sistema/api/v1/producto/'; /* PRODUCC
 const URLbodega = 'https://api.contifico.com/sistema/api/v1/bodega/';
 const URLmovInv = 'https://api.contifico.com/sistema/api/v1/movimiento-inventario/';
 
-
 class ProductController {
 
   async getProducts({
@@ -62,8 +61,9 @@ class ProductController {
 
         if (prodFind) {
           //TODO si encontramos el producto aqui si hay que buscar el stock de ese producto ejemplo:
+          const URLstocks = `https://api.contifico.com/sistema/api/v1/producto/${CTFC.id}/stock/`;
           const stockProd = [];
-          await axios.get(URLprod, {
+          await axios.get(URLstocks, {
             headers: {
               'Authorization': APIKEY
             }
