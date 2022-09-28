@@ -53,7 +53,7 @@ class ProductController {
         let bodega = '';
         let name = CTFC.nombre.toUpperCase();
         let pctjIVA = 1 + (CTFC.porcentaje_iva / 100);
-        let price = CTFC.pvp1 * pctjIVA;
+        let price = CTFC.pvp2 * pctjIVA;
 
         const prodFind = productos[0].find( (prod) => prod.SKU == CTFC.codigo);
 
